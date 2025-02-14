@@ -1,7 +1,5 @@
 <?php
-require_once __DIR__ . "/../../config/mysql.connection.php";
-// echo json_encode(["categoria repository"]);
-// exit;
+// require_once __DIR__ . "/../../config/mysql.connection.php";
 class CategoryRepository {
     private $conn;
 
@@ -10,7 +8,7 @@ class CategoryRepository {
     }
 
     public function getAll() {
-        $sql = "SELECT * FROM category";
+        $sql = "SELECT * FROM category where status = 1";
         $result = $this->conn->query($sql);
         $categorias = [];
 

@@ -1,0 +1,22 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+.ue_container_web {
+    height: 100vh;
+    background: var(--main-bg-color);
+    display: grid;
+    grid-template-columns: 250px 1fr;
+}
+
+.ue_container_module{
+    padding: 50px;
+}
+
+
+:root {
+    --main-bg-color: #FCFBFC;
+    --ue-color: #e3173e;
+    --text-color: #555571;
+}

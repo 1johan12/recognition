@@ -1,60 +1,63 @@
 <?php
 require_once __DIR__ . "/../service/category.service.php";
+require_once __DIR__ . "/../../config/mysql.connection.php";
+
 header("Content-Type: application/json");
-// echo json_encode(["categoria controller"]);
-// exit;
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-$method = $_SERVER["REQUEST_METHOD"];
-$service = new CategoryService($conn);
-$data = json_decode(file_get_contents(filename: "php://input"),true);
-// echo json_encode(["method",$method]);
-// exit;
-switch ($method) {
-    case 'GET':
-        fetchCategory();
-        break;
-    case 'POST':
-        // echo json_encode(["Add Cateogyr"]);
-        // exit;
-        addCategory();
-        break;
-    case 'DELETE':
-        deleteCategory();
-        break;
+class CategoryController {
+    private $service;
+
+    public function __construct($conn) {
+        $this->service = new CategoryService($conn);
+    }
+
+    public function handleRequest() {
+        $method = $_SERVER["REQUEST_METHOD"];
+        $data = json_decode(file_get_contents("php://input"), true);
+
+        switch ($method) {
+            case 'GET':
+                $this->fetchCategory();
+                break;
+            case 'POST':
+                $this->addCategory($data);
+                break;
+            case 'DELETE':
+                $this->deleteCategory($data);
+                break;
+            default:
+                http_response_code(405);
+                echo json_encode(["error" => "Método no permitido"]);
+                exit;
+        }
+    }
+
+    private function fetchCategory() {
+        echo json_encode($this->service->getAllCategory());
+        exit;
+    }
+
+    private function addCategory($data) {
+        if (!isset($data["title"])) {
+            echo json_encode(["error" => "El campo 'title' es obligatorio"]);
+            exit;
+        }
+        echo json_encode($this->service->createCategory($data["title"]));
+        exit;
+    }
+
+    private function deleteCategory($data) {
+        if (!isset($data["id"])) {
+            echo json_encode(["error" => "El campo 'id' es obligatorio"]);
+            exit;
+        }
+        echo json_encode($this->service->deleteCategory($data["id"]));
+        exit;
+    }
 }
 
-function fetchCategory() {
-    global $service;
-    echo json_encode($service->getAllCategory());
-    exit;
-}
-
-function addCategory(){
-    global $service;
-    global $data;
-    echo json_encode($service-> createCategory($data["name"] ?? ""));
-    exit;
-}
-
-function deleteCategory(){
-    global $service;
-    global $data;
-    echo json_encode($service->deleteCategory($data["id"] ?? ""));
-    exit;
-}
-
-// if ($_SERVER["REQUEST_METHOD"] === "POST") {
-//     $data = json_decode(file_get_contents("php://input"), true);
-//     echo json_encode($service->createCategoria($data["name"] ?? ""));
-//     exit;
-// }
-
-// if ($_SERVER["REQUEST_METHOD"] === "DELETE") {
-//     $data = json_decode(file_get_contents("php://input"), true);
-//     echo json_encode($service->deleteCategoria($data["id"] ?? ""));
-//     exit;
-// }
-
-http_response_code(405);
-echo json_encode(["error" => "Método no permitido"]);
+$controller = new CategoryController($conn);
+$controller->handleRequest();
 ?>
