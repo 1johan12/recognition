@@ -8,8 +8,8 @@ class RecognitionService {
         $this->repository = new RecognitionRepository($conn);
     }
 
-    public function getAllRecognition($page,$perPage,$filterByName,$filterByEventId) {
-        return $this->repository->getAll($page,$perPage,$filterByName,$filterByEventId);
+    public function getAllRecognition($page,$perPage,$filterByName,$filterByEventId,$filterByEditionId) {
+        return $this->repository->getAll($page,$perPage,$filterByName,$filterByEventId,$filterByEditionId);
     }
 
     public function createRecognition($data) {

@@ -8,12 +8,12 @@ class RecognitionRepository
         $this->conn = $db;
     }
 
-    public function getAll($page = 1, $perPage = 10,$filterByName = null,$filterByEventId = null){
+    public function getAll($page = 1, $perPage = 10,$filterByName = null,$filterByEventId = -1,$filterByEditionId = -1){
         // echo json_encode(["Pagina : " . $page . " | Por Pagina : " . $perPage . " |Name :" . $filterByName .  " |EventId " . $filterByEventId]);
         // exit;
-        $sql = "CALL sp_getRecognition(?, ?, ? )";
+        $sql = "CALL sp_getRecognition(?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("iis", $page, $perPage,$filterByName);
+        $stmt->bind_param("iisii", $page, $perPage,$filterByName,$filterByEventId,$filterByEditionId);
         $stmt->execute();
 
         $result = $stmt->get_result();

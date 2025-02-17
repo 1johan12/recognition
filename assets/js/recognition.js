@@ -1,9 +1,11 @@
 console.log("Recognition.js");
-const eventTitleSelect = document.getElementById("event");
+const eventTitleSelect = document.getElementById("filterEvent");
+const filterEventTitleSelect = document.getElementById("event");
 const eventEditionSelect = document.getElementById("eventEdition");
+const filterEventEditionSelect = document.getElementById("filterEventEdition");
 // const excelFile = document.getElementById("excelFile");
 const tableBody = document.querySelector("#recognition_table tbody");
-
+const modal = document.getElementById("importData");
 let hojasDatos = {};
 let category = [];
 let inputId = [];
@@ -11,13 +13,33 @@ let categoryUrl = "src/controller/category.controller.php";
 let eventTitleUrl = "src/controller/eventTitle.controller.php";
 let eventEditionUrl = "src/controller/eventEdition.controller.php";
 let recognitionUrl = "src/controller/recognition.controller.php";
+let globalEventId = 0;
 cargarCategorias();
 fetchEventTitle();
-fetchRecognition(1, 10);
-function fetchRecognition(page, perPage) {
-  console.log("Recognition", page, perPage);
-  filterByName = null;
-  filterByEventId = null;
+fetchRecognition();
+function fetchRecognition(
+  page = 1,
+  perPage = 10,
+  filterByEventId = -1,
+  filterByEditionId = -1,
+  filterByName = null
+) {
+  filterByEventId = document.getElementById("filterEvent").value;
+  filterByEditionId = document.getElementById("filterEventEdition").value;
+  if (filterByEventId === -1) filterByEditionId = -1;
+  console.log(
+    "page: ",
+    page,
+    "perPage: ",
+    perPage,
+    "filterByName: ",
+    filterByName,
+    "filterByEventId: ",
+    filterByEventId,
+    "filterByEditionId: ",
+    filterByEditionId
+  );
+
   $.ajax({
     url: recognitionUrl,
     type: "GET",
@@ -26,6 +48,7 @@ function fetchRecognition(page, perPage) {
       perPage: perPage,
       filterByName: filterByName,
       filterByEventId: filterByEventId,
+      filterByEditionId: filterByEditionId,
     },
     dataType: "json",
     success: function (data) {
@@ -78,11 +101,9 @@ function fetchEventTitle() {
     type: "GET",
     dataType: "json",
     success: function (data) {
-      // console.log("data");
-      // console.log(data);
-      // ev.innerHTML = '';
       data.forEach((element) => {
         createOptSelect(eventTitleSelect, element.id, element.title);
+        createOptSelect(filterEventTitleSelect, element.id, element.title);
       });
     },
     error: function (xhr, status, error) {
@@ -99,16 +120,27 @@ function createOptSelect(select, value, content) {
   select.appendChild(option);
 }
 
-function fetchEventEdition(eventTitleId) {
+function fetchEventEdition(eventTitleId, selectType = 1) {
   $.ajax({
     url: eventEditionUrl + "?event_title_id=" + eventTitleId,
     type: "GET",
     dataType: "json",
     success: function (data) {
-      eventEditionSelect.options.length = 1;
-      data.forEach((element) => {
-        createOptSelect(eventEditionSelect, element.id, element.edition);
-      });
+      if (selectType === 1) {
+        eventEditionSelect.options.length = 1;
+        data.forEach((element) => {
+          createOptSelect(eventEditionSelect, element.id, element.edition);
+        });
+      } else {
+        filterEventEditionSelect.options.length = 1;
+        data.forEach((element) => {
+          createOptSelect(
+            filterEventEditionSelect,
+            element.id,
+            element.edition
+          );
+        });
+      }
     },
     error: function (xhr, status, error) {
       console.error("Error al obtener event editions:", error);
@@ -184,39 +216,56 @@ function fnUploadDataExcel(input) {
   console.log("datos", hojasDatos);
 }
 
-function mostrarDatos(eventEditionId) {
-  // console.log(hojasDatos);
-  // mostrarDatos(this.value)
-  // for (const hoja in hojasDatos) {
-  //   category.forEach((element) => {
-  //     if (hoja === element.name) {
-  //       console.log("hola", element.name, element.id);
-  //       hojasDatos[hoja].forEach((item) => {
-  //         item.category_id = element.id;
-  //         item.event_edition_id = eventEditionId;
-  //         if (element.name === "JUECES") item.nombre = item.nombredejuez;
-  //         if (element.name === "COLEGIOS") item.nombre = item.colegio;
-  //         const recognitionElement = new RecognitionProcessModel(item);
-  //         console.log(recognitionElement);
-  //         $.ajax({
-  //           url: recognitionUrl,
-  //           type: "POST",
-  //           data: JSON.stringify({
-  //             recognitions: recognitionElement,
-  //           }),
-  //           contentType: "application/json",
-  //           dataType: "json",
-  //           success: function (response) {
-  //             console.log("Registros insertados:", response);
-  //           },
-  //           error: function (xhr, status, error) {
-  //             console.error("Error al enviar datos:", error);
-  //           },
-  //         });
-  //       });
-  //     }
-  //   });
-  // }
+function fnUploadDataToBD() {
+  let totalLength = 0;
+  console.log("fnUploadDataToBD", hojasDatos);
+  let maxLength = Object.values(hojasDatos).reduce((total, array) => {
+    return total + (Array.isArray(array) ? array.length : 0);
+  }, 0);
+  let bulkData = [];
+  for (const hoja in hojasDatos) {
+    category.forEach((element) => {
+      if (hoja === element.name) {
+        console.log("hola", element.name, element.id);
+        hojasDatos[hoja].forEach((item) => {
+          item.category_id = element.id;
+          item.event_edition_id = eventEditionSelect.value;
+          if (element.name === "JUECES") item.nombre = item.nombredejuez;
+          if (element.name === "COLEGIOS") item.nombre = item.colegio;
+          const recognitionElement = new RecognitionProcessModel(item);
+          console.log(recognitionElement);
+          $.ajax({
+            url: recognitionUrl,
+            type: "POST",
+            data: JSON.stringify({
+              recognitions: recognitionElement,
+            }),
+            contentType: "application/json",
+            dataType: "json",
+            success: function (response) {
+              totalLength++;
+              let porcentaje = (totalLength / maxLength) * 100;
+              let progressBar = document.getElementById("progressBar");
+              progressBar.style.width = `${porcentaje}%`;
+              progressBar.textContent = `${Math.round(porcentaje)}%`;
+              progressBar.setAttribute("aria-valuenow", porcentaje);
+              console.log("porcentaje", porcentaje);
+
+              if (porcentaje === 100) {
+                // console.log("Porcentaje 100%");
+                $("#importData").modal("hide");
+                fetchRecognition(1, 10);
+              }
+            },
+            error: function (xhr, status, error) {
+              console.error("Error al enviar datos:", error);
+            },
+          });
+        });
+      }
+    });
+  }
+  console.log(maxLength);
 }
 
 function normalizeText(text) {
@@ -343,14 +392,16 @@ function fnValidateInput(input) {
   switch (elementId) {
     case "event":
       condition = input.value.length >= 1;
-      console.log("event", input.value, condition);
       fnShowInputError(condition, existingSpan, input);
-      fetchEventEdition(input.value);
       break;
     case "excelFile":
       condition = input.value.length >= 1;
       fnShowInputError(condition, existingSpan, input);
       fnUploadDataExcel(input);
+      break;
+    case "eventEdition":
+      condition = input.value.length >= 1;
+      fnShowInputError(condition, existingSpan, input);
       break;
     default:
       condition = input.value.length >= 1;
@@ -370,13 +421,19 @@ function getMessage(inputIdMessage) {
 
 function fnRegisterData() {
   inputFn = ["event", "eventEdition", "excelFile"];
+
+  let editionValue = eventEditionSelect.value;
   inputFn.forEach((element) => {
     const input = document.getElementById(element);
     fnValidateInput(input);
+    if (element === eventEditionSelect.id)
+      eventEditionSelect.value = editionValue;
   });
-  if(inputFn === inputId){
-    console.log(true);
-    
+  // console.log(eventEditionSelect.value);
+
+  if (inputFn.every((valor, indice) => valor === inputId[indice])) {
+    document.getElementById("ue_btn_container").classList.add("d-none");
+    document.getElementById("progressBarContainer").classList.remove("d-none");
+    fnUploadDataToBD();
   }
-  
 }

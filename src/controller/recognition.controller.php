@@ -42,9 +42,10 @@ class RecognitionController
         $perPage = $_GET['perPage'];
         $filterByName = $_GET['filterByName'];
         $filterByEventId = $_GET['filterByEventId'];
+        $filterByEditionId = $_GET['filterByEditionId'];
         // echo json_encode([$page . "Por Pagina : " . $perPage . " Name :" . $filterByName .  " Hola " . $filterByEventId]);
         // exit;
-        echo json_encode($this->service->getAllRecognition($page,$perPage,$filterByName,$filterByEventId));
+        echo json_encode($this->service->getAllRecognition($page,$perPage,$filterByName,$filterByEventId,$filterByEditionId));
         exit;
     }
 

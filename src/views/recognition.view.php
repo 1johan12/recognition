@@ -1,11 +1,21 @@
 <link rel="stylesheet" href="assets/css/recognition.css">
+<!-- <div class="progress" role="progressbar" aria-label="Danger example" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+  <div class="progress-bar bg-danger" id="progressBar" style="width: 0%">0%</div>
+</div> -->
 <div class="ue_container_module">
     <div class="ue_recognition_header mb-5">
         <div class="ue_event_title ">
             <h1 class="text-red-600">Reconocimientos</h1>
         </div>
+
         <div class="ue_container-btn">
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importData">Importar Datos</button>
+            <select class="ue_select w-auto" name="" id="filterEvent" onchange="fetchRecognition(1,10);fetchEventEdition(this.value,2);">
+                <option value="-1">Selecciona Evento</option>
+            </select>
+            <select class="ue_select  w-auto" name="" id="filterEventEdition" onchange="fetchRecognition(1,10);">
+                <option value="-1"> Edicion</option>
+            </select>
+            <button type="button" class="btn btn-success w-auto" data-bs-toggle="modal" data-bs-target="#importData">Importar Datos <i class="fa-solid fa-file-excel"></i></button>
         </div>
     </div>
     <table class="table" id="recognition_table">
@@ -44,7 +54,7 @@
             <div class="modal-body">
                 <div class="ue_import_data">
                     <div class="d-flex flex-grow-1 flex-col position-relative pb-4">
-                        <select class="ue_select" name="" id="event" onchange="fnValidateInput(this);">
+                        <select class="ue_select" name="" id="event" onchange="fnValidateInput(this);fetchEventEdition(this.value);">
                             <option value="">Selecciona Evento</option>
                         </select>
                     </div>
@@ -60,11 +70,15 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="fnRegisterData()">Registrar Datos</button>
+                <div class="progress w-100 d-none" id="progressBarContainer" role="progressbar" aria-label="Danger example" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar bg-danger" id="progressBar" style="width: 0%">0%</div>
+                </div>
+                <div id="ue_btn_container">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="fnRegisterData()">Registrar Datos</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
 <script src="assets/js/recognition.js"></script>
