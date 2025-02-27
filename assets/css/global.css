@@ -3,6 +3,12 @@
     padding: 0;
 }
 
+:root {
+    --main-bg-color: #FCFBFC;
+    --ue-color: #e3173e;
+    --text-color: #555571;
+}
+
 .ue_container_web {
     height: 100vh;
     background: var(--main-bg-color);
@@ -10,13 +16,57 @@
     grid-template-columns: 250px 1fr;
 }
 
-.ue_container_module{
+.ue_container_module {
     padding: 50px;
 }
 
 
-:root {
-    --main-bg-color: #FCFBFC;
-    --ue-color: #e3173e;
-    --text-color: #555571;
+
+
+
+/* SPAN ERROR */
+.ue_span_error {
+    color: var(--ue-color) !important;
+    font-weight: bold !important;
+    font-size: 10px !important;
+    text-align: end !important;
+    position: absolute !important;
+    bottom: 4px !important;
+    right: 8px !important;
+}
+
+.ue_input_border_red {
+    border: 2px solid var(--ue-color) !important;
+}
+
+.ue_input_border_black {
+    border: 1px solid #e5e7eb !important;
+}
+
+.ue_select_warning:focus {
+    border-color: var(--ue-color) !important;
+}
+
+/* END SPAN ERROR */
+
+
+/* STYLES */
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.modalIndex {
+    z-index: 1040 !important;
+}
+
+.modalIndex+.modal-backdrop {
+    z-index: 1040 !important;
+}
+#addEventEdition {
+    z-index: 9999 !important;
+}
+
+#addEventEdition+.modal-backdrop {
+    z-index: 9999 !important;
 }

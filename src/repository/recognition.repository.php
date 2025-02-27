@@ -8,19 +8,18 @@ class RecognitionRepository
         $this->conn = $db;
     }
 
-    public function getAll($page = 1, $perPage = 10,$filterByName = null,$filterByEventId = -1,$filterByEditionId = -1){
-        // echo json_encode(["Pagina : " . $page . " | Por Pagina : " . $perPage . " |Name :" . $filterByName .  " |EventId " . $filterByEventId]);
-        // exit;
-        $sql = "CALL sp_getRecognition(?, ?, ?, ?, ?)";
+    public function getAll($page = 1, $perPage = 10, $filterByName = null, $filterByEventId = -1, $filterByEditionId = -1, $filterByCategoryId = -1)
+    {
+        $sql = "CALL sp_getRecognition(?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("iisii", $page, $perPage,$filterByName,$filterByEventId,$filterByEditionId);
+        $stmt->bind_param("iisiii", $page, $perPage, $filterByName, $filterByEventId, $filterByEditionId, $filterByCategoryId);
         $stmt->execute();
 
         $result = $stmt->get_result();
-        $categorias = [];
+        $recognition = [];
 
         while ($row = $result->fetch_assoc()) {
-            $categorias[] = $row;
+            $recognition[] = $row;
         }
 
         $stmt->next_result();
@@ -30,12 +29,13 @@ class RecognitionRepository
         $stmt->close();
 
         return [
-            'recognition' => $categorias,
+            'recognition' => $recognition,
             'total' => $total,
         ];
     }
 
-    public function fetchByEventTitleId($eventTitleId){
+    public function fetchByEventTitleId($eventTitleId)
+    {
 
         $sql = "SELECT * FROM event_edition WHERE status = 1 AND event_title_id = ?";
         $stmt = $this->conn->prepare($sql);
@@ -50,31 +50,27 @@ class RecognitionRepository
         return $editions;
     }
 
+    public function create($data)
+    {
 
-    // public function create($name) {
-    //     $stmt = $this->conn->prepare("INSERT INTO recognition (fullname,mail,access_code,created_at,participant_type,event_edition_id,category_id) VALUES(?,?,?,now(),?,?,?);");
-    //     $stmt->bind_param("s", $name);
+        $jsonData = json_encode($data);
+
+        $query = "CALL sp_insertRecognition(?)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param('s', $jsonData);
+
+        if ($stmt->execute()) {
+            return "Datos insertados correctamente.";
+        } else {
+            return "Error al insertar datos: " . $stmt->error;
+        }
+    }
+
+
+    // public function delete($id)
+    // {
+    //     $stmt = $this->conn->prepare("DELETE FROM event_edition WHERE id = ?");
+    //     $stmt->bind_param("i", $id);
     //     return $stmt->execute();
     // }
-    public function create($data){
-        $stmt = $this->conn->prepare("INSERT INTO recognition (fullname,mail,access_code,created_at,participant_type,event_edition_id,category_id) VALUES(?,?,?,now(),?,?,?);");
-        $stmt->bind_param(
-            "ssssii",
-            $data["fullname"],
-            $data["mail"],
-            $data["access_code"],
-            $data["participant_type"],
-            $data["event_edition_id"],
-            $data["category_id"]
-        );
-        $stmt->execute();
-        return true;
-    }
-
-
-    public function delete($id){
-        $stmt = $this->conn->prepare("DELETE FROM event_edition WHERE id = ?");
-        $stmt->bind_param("i", $id);
-        return $stmt->execute();
-    }
 }

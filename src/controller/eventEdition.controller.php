@@ -26,7 +26,6 @@ class EventEditionController
                 if (isset($_GET['event_title_id'])) {
                     $this->fetchEventEditionByTitleId($eventTitleId);
                 } else {
-                    
                     $this->fetchEventEdition();
                 }
                 break;
@@ -45,24 +44,30 @@ class EventEditionController
 
     private function fetchEventEdition()
     {
-        echo json_encode($this->service->getAllEventEdition());
+        $data = [
+            "status" => $_GET['status'] ?? 1,
+            "eventId" => $_GET['eventId'] ?? -1,
+            "page" => $_GET['page'] ?? -1,
+            "perPage" => $_GET['perPage'] ?? -1
+        ];
+        // echo json_encode([$data,"Hola si paso"]); exit;
+        echo json_encode($this->service->getAllEventEdition($data));
         exit;
     }
 
     private function fetchEventEditionByTitleId($eventTitleId)
     {
-
         echo json_encode($this->service->fetchEventEditionByTitleId($eventTitleId));
         exit;
     }
 
     private function addEventEdition($data)
     {
-        if (!isset($data["title"])) {
-            echo json_encode(["error" => "El campo 'title' es obligatorio"]);
+        if (!isset($data["p_event_title_id"]) && !isset($data["p_start_date"]) && !isset($data["p_end_date"])) {
+            echo json_encode(["error" => "El campo 'evento,fecha inicio,fecha fin' es obligatorio"]);
             exit;
         }
-        echo json_encode($this->service->createEventEdition($data["title"]));
+        echo json_encode($this->service->createEventEdition($data));
         exit;
     }
 

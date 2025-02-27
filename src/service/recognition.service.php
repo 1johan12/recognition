@@ -8,23 +8,17 @@ class RecognitionService {
         $this->repository = new RecognitionRepository($conn);
     }
 
-    public function getAllRecognition($page,$perPage,$filterByName,$filterByEventId,$filterByEditionId) {
-        return $this->repository->getAll($page,$perPage,$filterByName,$filterByEventId,$filterByEditionId);
+    public function getAllRecognition($page,$perPage,$filterByName,$filterByEventId,$filterByEditionId,$filterByCategoryId) {
+        return $this->repository->getAll($page,$perPage,$filterByName,$filterByEventId,$filterByEditionId,$filterByCategoryId);
     }
 
     public function createRecognition($data) {
         
         if (empty($data)) {
-            return ["success" => false, "message" => "El nombre es requerido"];
+            return ["success" => false, "message" => "Datos no registrados"];
         }
         return ["success" => $this->repository->create($data)];
     }
 
-    public function deleteRecognition($id) {
-        if (!is_numeric($id)) {
-            return ["success" => false, "message" => "ID inválido"];
-        }
-        return ["success" => $this->repository->delete($id)];
-    }
 }
 ?>

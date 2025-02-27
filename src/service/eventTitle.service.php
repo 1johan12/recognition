@@ -12,11 +12,11 @@ class EventTitleService {
         return $this->repository->getAll();
     }
 
-    public function createEventTitle($name) {
-        if (empty($name)) {
-            return ["success" => false, "message" => "El nombre es requerido"];
+    public function createEventTitle($data) {
+        if (empty($data)) {
+            return ["success" => false, "message" => "Data is required"];
         }
-        return ["success" => $this->repository->create($name)];
+        return ["success" => $this->repository->create($data)];
     }
 
     public function deleteEventTitle($id) {

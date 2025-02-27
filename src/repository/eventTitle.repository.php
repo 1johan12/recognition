@@ -17,9 +17,11 @@ class EventTitleRepository {
         return $categorias;
     }
 
-    public function create($name) {
-        $stmt = $this->conn->prepare("INSERT INTO event_title (name) VALUES (?)");
-        $stmt->bind_param("s", $name);
+    public function create($data) {
+        // $name = $data["name"];
+        // echo json_encode("Create ". $name);exit;
+        $stmt = $this->conn->prepare("INSERT INTO event_title (title,created_at) VALUES (?,now())");
+        $stmt->bind_param("s", $data["name"]);
         return $stmt->execute();
     }
 

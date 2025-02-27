@@ -1,8 +1,10 @@
+const util = new Utils();
 console.log("Recognition.js");
 const eventTitleSelect = document.getElementById("filterEvent");
 const filterEventTitleSelect = document.getElementById("event");
 const eventEditionSelect = document.getElementById("eventEdition");
 const filterEventEditionSelect = document.getElementById("filterEventEdition");
+const filterCategorySelect = document.getElementById("filterCategory");
 // const excelFile = document.getElementById("excelFile");
 const tableBody = document.querySelector("#recognition_table tbody");
 const modal = document.getElementById("importData");
@@ -14,7 +16,10 @@ let eventTitleUrl = "src/controller/eventTitle.controller.php";
 let eventEditionUrl = "src/controller/eventEdition.controller.php";
 let recognitionUrl = "src/controller/recognition.controller.php";
 let globalEventId = 0;
-cargarCategorias();
+
+let inputIdCase = "recognition";
+
+fetchCategory();
 fetchEventTitle();
 fetchRecognition();
 function fetchRecognition(
@@ -26,19 +31,8 @@ function fetchRecognition(
 ) {
   filterByEventId = document.getElementById("filterEvent").value;
   filterByEditionId = document.getElementById("filterEventEdition").value;
+  filterByCategoryId = document.getElementById("filterCategory").value;
   if (filterByEventId === -1) filterByEditionId = -1;
-  console.log(
-    "page: ",
-    page,
-    "perPage: ",
-    perPage,
-    "filterByName: ",
-    filterByName,
-    "filterByEventId: ",
-    filterByEventId,
-    "filterByEditionId: ",
-    filterByEditionId
-  );
 
   $.ajax({
     url: recognitionUrl,
@@ -49,18 +43,15 @@ function fetchRecognition(
       filterByName: filterByName,
       filterByEventId: filterByEventId,
       filterByEditionId: filterByEditionId,
+      filterByCategoryId: filterByCategoryId,
     },
     dataType: "json",
-    success: function (data) {
-      console.log("Fecht Recognition", data);
-
+    success: function (data) {      
       tableBody.innerHTML = "";
       data.recognition.forEach((item, index) => {
         const row = `
                 <tr>
                     <td scope="row">${index + 1}</td>
-                    <td>${item.title}</td>
-                    <td>${item.edition}</td>
                     <td>${item.fullname}</td>
                     <td>${item.category}</td>
                     <td>${item.mail ?? "-"}</td>
@@ -80,14 +71,21 @@ function fetchRecognition(
   });
 }
 
-function cargarCategorias() {
+function fetchCategory() {
   $.ajax({
     url: categoryUrl,
     type: "GET",
     dataType: "json",
+    data: { status : 1},
+
     success: function (data) {
       category = data;
-      // console.log(category);
+      console.log("fetchCategory", data);
+
+      filterCategorySelect.options.length = 1;
+      data.forEach((element) => {
+        createOptSelect(filterCategorySelect, element.id, element.name);
+      });
     },
     error: function () {
       console.log("Error al obtener categorías");
@@ -148,35 +146,6 @@ function fetchEventEdition(eventTitleId, selectType = 1) {
   });
 }
 
-function integerToRoman(num) {
-  const romanValues = {
-    M: 1000,
-    CM: 900,
-    D: 500,
-    CD: 400,
-    C: 100,
-    XC: 90,
-    L: 50,
-    XL: 40,
-    X: 10,
-    IX: 9,
-    V: 5,
-    IV: 4,
-    I: 1,
-  };
-  let roman = "";
-  for (let key in romanValues) {
-    while (num >= romanValues[key]) {
-      roman += key;
-      num -= romanValues[key];
-    }
-  }
-  return roman;
-}
-
-// console.log(integerToRoman(9));
-// console.log(integerToRoman(81));
-
 function fnUploadDataExcel(input) {
   const file = input.files[0];
   if (!file) return;
@@ -215,57 +184,69 @@ function fnUploadDataExcel(input) {
   reader.readAsArrayBuffer(file);
   console.log("datos", hojasDatos);
 }
-
 function fnUploadDataToBD() {
-  let totalLength = 0;
-  console.log("fnUploadDataToBD", hojasDatos);
+  console.log("fnUploadDataToBD");
+  
   let maxLength = Object.values(hojasDatos).reduce((total, array) => {
     return total + (Array.isArray(array) ? array.length : 0);
   }, 0);
+
   let bulkData = [];
+
+  function updateProgressBar(progress) {
+    let progressBar = document.getElementById("progressBar");
+    progressBar.style.width = `${progress}%`;
+    progressBar.textContent = `${Math.round(progress)}%`;
+    progressBar.setAttribute("aria-valuenow", progress);
+  }
+
+  let progress = 0;
+  const progressIncrement = 50 / maxLength;
+
   for (const hoja in hojasDatos) {
     category.forEach((element) => {
       if (hoja === element.name) {
-        console.log("hola", element.name, element.id);
+        console.log("Procesando hoja:", element.name, element.id);
         hojasDatos[hoja].forEach((item) => {
           item.category_id = element.id;
           item.event_edition_id = eventEditionSelect.value;
           if (element.name === "JUECES") item.nombre = item.nombredejuez;
           if (element.name === "COLEGIOS") item.nombre = item.colegio;
-          const recognitionElement = new RecognitionProcessModel(item);
-          console.log(recognitionElement);
-          $.ajax({
-            url: recognitionUrl,
-            type: "POST",
-            data: JSON.stringify({
-              recognitions: recognitionElement,
-            }),
-            contentType: "application/json",
-            dataType: "json",
-            success: function (response) {
-              totalLength++;
-              let porcentaje = (totalLength / maxLength) * 100;
-              let progressBar = document.getElementById("progressBar");
-              progressBar.style.width = `${porcentaje}%`;
-              progressBar.textContent = `${Math.round(porcentaje)}%`;
-              progressBar.setAttribute("aria-valuenow", porcentaje);
-              console.log("porcentaje", porcentaje);
 
-              if (porcentaje === 100) {
-                // console.log("Porcentaje 100%");
-                $("#importData").modal("hide");
-                fetchRecognition(1, 10);
-              }
-            },
-            error: function (xhr, status, error) {
-              console.error("Error al enviar datos:", error);
-            },
-          });
+          // console.log(item);
+          bulkData.push(new RecognitionProcessModel(item));
+
+          progress += progressIncrement;
+          updateProgressBar(progress);
         });
       }
     });
   }
-  console.log(maxLength);
+  // return console.log("bulkData", bulkData);
+
+  $.ajax({
+    url: recognitionUrl,
+    type: "POST",
+    data: JSON.stringify({
+      recognitions: bulkData,
+    }),
+    contentType: "application/json",
+    dataType: "json",
+    success: function (response) {
+      console.log("Datos insertados correctamente:", response);
+
+      updateProgressBar(100);
+
+      $("#importData").modal("hide");
+      fetchRecognition(1, 10);
+      util.fnCleanInputs(inputIdCase);
+      document.getElementById("ue_btn_container").classList.remove("d-none");
+      document.getElementById("progressBarContainer").classList.add("d-none");
+    },
+    error: function (xhr, status, error) {
+      console.error("Error al enviar datos:", error);
+    },
+  });
 }
 
 function normalizeText(text) {
@@ -274,26 +255,6 @@ function normalizeText(text) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9]/g, "")
     .toLowerCase();
-}
-
-function addCategory() {
-  $.ajax({
-    url: controllerPath,
-    type: "POST",
-    contentType: "application/json",
-    data: JSON.stringify({
-      name: "Cateter",
-    }),
-    success: function (response) {
-      if (response.success) {
-        console.log(response);
-
-        cargarCategorias();
-      } else {
-        alert("Error al agregar categoría");
-      }
-    },
-  });
 }
 
 function renderPagination(total, perPage, currentPage) {
@@ -356,70 +317,36 @@ function renderPagination(total, perPage, currentPage) {
   }
 }
 
-function fnShowInputError(condition, existingSpan, input) {
-  if (condition) {
-    existingSpan.classList.add("d-none");
-    input.classList.remove("ue_input_border_red", "ue_select_warning");
-    input.classList.add("ue_input_border_black");
-    if (!inputId.includes(input.id)) inputId.push(input.id);
-  } else {
-    existingSpan.classList.remove("d-none");
-    input.classList.remove("ue_input_border_black");
-    input.classList.add("ue_input_border_red", "ue_select_warning");
-    inputId = inputId.filter((item) => item !== input.id);
-  }
-}
-
-function fnCreateSpanError(input, spanId, elementId) {
-  let existingSpan = document.getElementById(spanId);
-  if (!existingSpan) {
-    const newSpan = document.createElement("span");
-    newSpan.classList.add("ue_span_error");
-    newSpan.id = spanId;
-    newSpan.textContent = getMessage(elementId);
-    input.parentNode.insertBefore(newSpan, input.nextSibling);
-    existingSpan = newSpan;
-  }
-  return existingSpan;
-}
-
 function fnValidateInput(input) {
   let condition;
   let spanId = `${input.id}-error`;
   let idInputMessage = input.id;
-  const existingSpan = fnCreateSpanError(input, spanId, idInputMessage);
+  const existingSpan = util.fnCreateSpanError(input, spanId, idInputMessage);
   let elementId = input.id;
   switch (elementId) {
     case "event":
       condition = input.value.length >= 1;
-      fnShowInputError(condition, existingSpan, input);
+      util.fnShowInputError(condition, existingSpan, input, inputIdCase);
       break;
     case "excelFile":
       condition = input.value.length >= 1;
-      fnShowInputError(condition, existingSpan, input);
+      util.fnShowInputError(condition, existingSpan, input, inputIdCase);
       fnUploadDataExcel(input);
       break;
     case "eventEdition":
       condition = input.value.length >= 1;
-      fnShowInputError(condition, existingSpan, input);
+      util.fnShowInputError(condition, existingSpan, input, inputIdCase);
       break;
     default:
       condition = input.value.length >= 1;
-      fnShowInputError(condition, existingSpan, input);
+      util.fnShowInputError(condition, existingSpan, input, inputIdCase);
       break;
   }
 }
 
-function getMessage(inputIdMessage) {
-  const messages = {
-    event: "Evento obligatorio*",
-    eventEdition: "obligatorio*",
-    excelFile: "Selecciona un archivo excel*",
-  };
-  return messages[inputIdMessage] || "Error no especificado.";
-}
-
 function fnRegisterData() {
+  console.log("fnRegisterData",util.inputIdsByContext[inputIdCase][0],inputId);
+  
   inputFn = ["event", "eventEdition", "excelFile"];
 
   let editionValue = eventEditionSelect.value;
@@ -429,9 +356,7 @@ function fnRegisterData() {
     if (element === eventEditionSelect.id)
       eventEditionSelect.value = editionValue;
   });
-  // console.log(eventEditionSelect.value);
-
-  if (inputFn.every((valor, indice) => valor === inputId[indice])) {
+  if (inputFn.length === util.inputIdsByContext[inputIdCase].length) {
     document.getElementById("ue_btn_container").classList.add("d-none");
     document.getElementById("progressBarContainer").classList.remove("d-none");
     fnUploadDataToBD();

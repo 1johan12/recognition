@@ -8,8 +8,8 @@ class CategoryService {
         $this->repository = new CategoryRepository($conn);
     }
 
-    public function getAllCategory() {
-        return $this->repository->getAll();
+    public function getAllCategory($status) {
+        return $this->repository->getAll($status);
     }
 
     public function createCategory($name) {
@@ -19,6 +19,12 @@ class CategoryService {
         return ["success" => $this->repository->create($name)];
     }
 
+    public function updateCategory($data) {
+        if (empty($data)) {
+            return ["success" => false, "message" => "ID inválido"];
+        }
+        return ["success" => $this->repository->update($data)];
+    }
     public function deleteCategory($id) {
         if (!is_numeric($id)) {
             return ["success" => false, "message" => "ID inválido"];

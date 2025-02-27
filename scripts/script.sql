@@ -33,6 +33,7 @@ CREATE TABLE `recognition` (
   `participant_type` VARCHAR(50),
   `event_edition_id` INT,
   `category_id` INT,
+  `classification` VARCHAR(100),
   CONSTRAINT fk_recognition_event_edition FOREIGN KEY (`event_edition_id`) 
   REFERENCES `event_edition` (`id`) 
   ON DELETE RESTRICT ON UPDATE CASCADE,

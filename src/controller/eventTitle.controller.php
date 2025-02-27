@@ -40,11 +40,13 @@ class EventTitleController {
     }
 
     private function addEventTitle($data) {
-        if (!isset($data["title"])) {
+        // echo json_encode($data["eventTitle"]);
+        // exit;
+        if (!isset($data["eventTitle"])) {
             echo json_encode(["error" => "El campo 'title' es obligatorio"]);
             exit;
         }
-        echo json_encode($this->service->createEventTitle($data["title"]));
+        echo json_encode($this->service->createEventTitle($data["eventTitle"]));
         exit;
     }
 

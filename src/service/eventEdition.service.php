@@ -8,8 +8,8 @@ class EventEditionService {
         $this->repository = new EventEditionRepository($conn);
     }
 
-    public function getAllEventEdition() {
-        return $this->repository->getAll();
+    public function getAllEventEdition($data) {
+        return $this->repository->getAll($data);
     }
 
     public function fetchEventEditionByTitleId($eventTitleId) {

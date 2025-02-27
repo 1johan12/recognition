@@ -27,9 +27,6 @@ class RecognitionController
             case 'POST':
                 $this->addRecognition($data);
                 break;
-            case 'DELETE':
-                $this->deleteRecognition($data);
-                break;
             default:
                 http_response_code(405);
                 echo json_encode(["error" => "Método no permitido"]);
@@ -37,20 +34,21 @@ class RecognitionController
         }
     }
 
-    private function fetchRecognition(){
+    private function fetchRecognition()
+    {
         $page = $_GET['page'];
         $perPage = $_GET['perPage'];
         $filterByName = $_GET['filterByName'];
         $filterByEventId = $_GET['filterByEventId'];
         $filterByEditionId = $_GET['filterByEditionId'];
-        // echo json_encode([$page . "Por Pagina : " . $perPage . " Name :" . $filterByName .  " Hola " . $filterByEventId]);
-        // exit;
-        echo json_encode($this->service->getAllRecognition($page,$perPage,$filterByName,$filterByEventId,$filterByEditionId));
+        $filterByCategoryId = $_GET['filterByCategoryId'];
+        echo json_encode($this->service->getAllRecognition($page, $perPage, $filterByName, $filterByEventId, $filterByEditionId, $filterByCategoryId));
         exit;
     }
 
     private function addRecognition($data)
     {
+
         if (!isset($data["recognitions"])) {
             echo json_encode(["error" => "Datos no recibidos correctamente"]);
             http_response_code(400);
@@ -60,16 +58,6 @@ class RecognitionController
         $recognitions = $data["recognitions"];
         $result = $this->service->createRecognition($recognitions);
         echo json_encode(["success" => $result]);
-    }
-
-    private function deleteRecognition($data)
-    {
-        if (!isset($data["id"])) {
-            echo json_encode(["error" => "El campo 'id' es obligatorio"]);
-            exit;
-        }
-        echo json_encode($this->service->deleteRecognition($data["id"]));
-        exit;
     }
 }
 

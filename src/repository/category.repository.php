@@ -7,15 +7,18 @@ class CategoryRepository {
         $this->conn = $db;
     }
 
-    public function getAll() {
-        $sql = "SELECT * FROM category where status = 1";
-        $result = $this->conn->query($sql);
-        $categorias = [];
+    public function getAll($status = 1) {
+        $sql = "CALL sp_getCategory(?)";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $status);
+        $stmt->execute();
 
+        $result = $stmt->get_result();
+        $category = [];
         while ($row = $result->fetch_assoc()) {
-            $categorias[] = $row;
+            $category[] = $row;
         }
-        return $categorias;
+        return $category;
     }
 
     public function create($name) {
@@ -24,8 +27,16 @@ class CategoryRepository {
         return $stmt->execute();
     }
 
+    public function update($data) {
+        // echo json_encode([$data["name"],$data["status"],$data["id"]]);
+        // exit;
+        $stmt = $this->conn->prepare("UPDATE category SET name = ?, status = ? WHERE id = ?");
+        $stmt->bind_param("sii", $data["name"],$data["status"],$data["id"]);
+        return $stmt->execute();
+    }
+
     public function delete($id) {
-        $stmt = $this->conn->prepare("DELETE FROM category WHERE id = ?");
+        $stmt = $this->conn->prepare("call sp_deleteCategory(?)");
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }

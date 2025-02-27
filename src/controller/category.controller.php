@@ -24,7 +24,12 @@ class CategoryController {
             case 'POST':
                 $this->addCategory($data);
                 break;
-            case 'DELETE':
+            case 'PUT':
+                // echo json_encode(["METODO PUT"]); exit;
+                $this->updateCategory($data);
+                break;
+                case 'DELETE':
+                    // echo json_encode(["METODO delete"]); exit;
                 $this->deleteCategory($data);
                 break;
             default:
@@ -35,21 +40,32 @@ class CategoryController {
     }
 
     private function fetchCategory() {
-        echo json_encode($this->service->getAllCategory());
+        $status = $_GET['status'];
+        echo json_encode($this->service->getAllCategory($status));
         exit;
     }
 
     private function addCategory($data) {
-        if (!isset($data["title"])) {
-            echo json_encode(["error" => "El campo 'title' es obligatorio"]);
+        if (!isset($data["name"])) {
+            echo json_encode(["error" => "El campo 'name' es obligatorio"]);
             exit;
         }
-        echo json_encode($this->service->createCategory($data["title"]));
+        echo json_encode($this->service->createCategory($data["name"]));
         exit;
     }
 
+    private function updateCategory($data) {
+        if (!isset($data)) {
+            http_response_code(400);
+            echo json_encode(["error" => "Data es obligatorio"]);
+            exit;
+        }
+        echo json_encode($this->service->updateCategory($data));
+        exit;
+    }
     private function deleteCategory($data) {
         if (!isset($data["id"])) {
+            http_response_code(400);
             echo json_encode(["error" => "El campo 'id' es obligatorio"]);
             exit;
         }
